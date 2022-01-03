@@ -1,5 +1,5 @@
 ### Build stage for the website frontend
-FROM --platform=$BUILDPLATFORM node:17.4.0-bullseye as website
+FROM --platform=$BUILDPLATFORM node:16-bullseye as website
 RUN apt-get update
 RUN apt-get install -y protobuf-compiler libprotobuf-dev
 WORKDIR /code
@@ -12,8 +12,8 @@ RUN npm run codegen
 RUN npm run build
 
 ### Build stage for the website backend server
-FROM --platform=$BUILDPLATFORM golang:1.17.6-alpine as server
-RUN apk add --no-cache gcc musl-dev protobuf protobuf-dev
+FROM --platform=$BUILDPLATFORM golang:1.17.5-bullseye as server
+RUN apt-get update && apt-get install -y --no-install-recommends gcc protobuf-compiler libprotobuf-dev
 WORKDIR /code
 ENV CGO_ENABLED=1
 ENV GO111MODULE=on
@@ -31,23 +31,20 @@ COPY ./pkg/ ./pkg/
 COPY ./internal/ ./internal/
 ARG TARGETOS
 ARG TARGETARCH
-ARG TARGETVARIANT
-RUN if [ "$TARGETARCH" = "arm64" ]; then FILE=aarch64-linux-musl; \
-    elif [ "$TARGETARCH" = "arm" ] && [ "$TARGETVARIANT" = "v7" ]; then FILE=armv7l-linux-musleabihf; \
-    elif [ "$TARGETARCH" = "amd64" ]; then FILE=x86_64-linux-musl; \
-    else FILE=${TARGETARCH}-linux-musl; fi && \
-    wget https://musl.cc/${FILE}-cross.tgz && tar xzf ${FILE}-cross.tgz
-RUN if [ "$TARGETARCH" = "arm64" ]; then FILE=aarch64-linux-musl; \
-    elif [ "$TARGETARCH" = "arm" ] && [ "$TARGETVARIANT" = "v7" ]; then FILE=armv7l-linux-musleabihf; \
-    elif [ "$TARGETARCH" = "amd64" ]; then FILE=x86_64-linux-musl; \
-    else FILE=${TARGETARCH}-linux-musl; fi && \
-    CC=`pwd`/${FILE}-cross/bin/${FILE}-gcc \
+RUN if [ "$TARGETARCH" = "arm64" ]; then FILE=aarch64-linux-gnu; \
+    elif [ "$TARGETARCH" = "arm" ] && [ "$TARGETVARIANT" = "v7" ]; then FILE=arm-linux-gnueabihf; \
+    else FILE=${TARGETARCH}-linux-gnu; fi && \
+    apt-get install -y --no-install-recommends gcc-${FILE} libc-dev-${TARGETARCH}-cross
+RUN if [ "$TARGETARCH" = "arm64" ]; then FILE=aarch64-linux-gnu; \
+    elif [ "$TARGETARCH" = "arm" ] && [ "$TARGETVARIANT" = "v7" ]; then FILE=arm-linux-gnueabihf; \
+    else FILE=${TARGETARCH}-linux-gnu; fi && \
+    CC=${FILE}-gcc \
     GOOS=$TARGETOS GOARCH=$TARGETARCH \
     go build -o wg-access-server
 
 ### Server
-FROM alpine:3.15.0
-RUN apk add --no-cache iptables ip6tables wireguard-tools curl
+FROM debian:bullseye
+RUN apt-get update && apt-get install -y --no-install-recommends iptables wireguard-tools curl
 ENV WG_CONFIG="/config.yaml"
 ENV WG_STORAGE="sqlite3:///data/db.sqlite3"
 COPY --from=server /code/wg-access-server /usr/local/bin/wg-access-server
