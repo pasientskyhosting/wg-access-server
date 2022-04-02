@@ -31,6 +31,7 @@ type Watcher interface {
 type Callback func(device *Device)
 
 type Device struct {
+	// TODO snake_case does not work anymore
 	Owner         string    `json:"owner" gorm:"type:varchar(100);unique_index:key;primary_key"`
 	OwnerName     string    `json:"owner_name"`
 	OwnerEmail    string    `json:"owner_email"`
