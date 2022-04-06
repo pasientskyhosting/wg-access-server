@@ -4,37 +4,36 @@ import (
 	"reflect"
 	"runtime"
 
-	"github.com/jinzhu/gorm"
 	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 type GormWatcher struct {
-	*gorm.Callback
+	*gorm.DB
 	table string
 }
 
 func NewGormWatcher(db *gorm.DB, table string) *GormWatcher {
-	logrus.Debug("creating gorm watcher")
+	logrus.Debugf("creating gorm watcher on %s", table)
 	return &GormWatcher{
-		Callback: db.Callback(),
-		table:    table,
+		DB:    db,
+		table: table,
 	}
 }
 
 func (w *GormWatcher) OnAdd(cb Callback) {
 	name := runtime.FuncForPC(reflect.ValueOf(cb).Pointer()).Name()
 	logrus.Debugf("OnAdd callback name %s", name)
-	w.Callback.Create().Register(name, func(scope *gorm.Scope) {
-		w.emit(cb, scope)
-
+	w.Callback().Create().Register(name, func(tx *gorm.DB) {
+		w.emit(cb, tx)
 	})
 }
 
 func (w *GormWatcher) OnDelete(cb Callback) {
 	name := runtime.FuncForPC(reflect.ValueOf(cb).Pointer()).Name()
 	logrus.Debugf("OnDelete callback name %s", name)
-	w.Callback.Delete().Register(name, func(scope *gorm.Scope) {
-		w.emit(cb, scope)
+	w.Callback().Delete().Register(name, func(tx *gorm.DB) {
+		w.emit(cb, tx)
 	})
 }
 
@@ -42,9 +41,10 @@ func (w *GormWatcher) OnReconnect(cb func()) {
 	// noop because the watcher can't reconnect
 }
 
-func (w *GormWatcher) emit(cb Callback, scope *gorm.Scope) {
-	if scope.TableName() == w.table {
-		cb(*scope.Value.(**Device))
+func (w *GormWatcher) emit(cb Callback, tx *gorm.DB) {
+	if tx.Statement.Table == w.table && tx.Statement.ReflectValue.Type() == reflect.TypeOf(Device{}) {
+		d, _ := tx.Statement.ReflectValue.Interface().(Device)
+		cb(&d)
 	}
 }
 

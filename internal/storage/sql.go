@@ -6,34 +6,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
-
-// GormLogger is a custom logger for Gorm, making it use logrus.
-type GormLogger struct{}
-
-// Print handles log events from Gorm for the custom logger.
-func (*GormLogger) Print(v ...interface{}) {
-	switch v[0] {
-	case "sql":
-		logrus.WithFields(
-			logrus.Fields{
-				"module":  "gorm",
-				"type":    "sql",
-				"rows":    v[5],
-				"src_ref": v[1],
-				"values":  v[4],
-			},
-		).Debug(v[3])
-	case "logrus":
-		logrus.WithFields(logrus.Fields{"module": "gorm", "type": "logrus"}).Print(v[2])
-	}
-}
 
 // implements Storage interface
 type SQLStorage struct {
@@ -41,10 +20,12 @@ type SQLStorage struct {
 	db               *gorm.DB
 	sqlType          string
 	connectionString string
+	dialector        gorm.Dialector
 }
 
 func NewSqlStorage(u *url.URL) *SQLStorage {
 	var connectionString string
+	var dialect gorm.Dialector
 
 	switch u.Scheme {
 	case "postgresql":
@@ -54,10 +35,14 @@ func NewSqlStorage(u *url.URL) *SQLStorage {
 		fallthrough
 	case "postgres":
 		connectionString = pgconn(u)
+		// Open does not actually open the connection, only create the Dialector object
+		dialect = postgres.Open(connectionString)
 	case "mysql":
 		connectionString = mysqlconn(u)
+		dialect = mysql.Open(connectionString)
 	case "sqlite3":
 		connectionString = sqlite3conn(u)
+		dialect = sqlite.Open(connectionString)
 	default:
 		// unreachable because our storage backend factory
 		// function (contracts.go) already checks the url scheme.
@@ -69,6 +54,7 @@ func NewSqlStorage(u *url.URL) *SQLStorage {
 		db:               nil,
 		sqlType:          u.Scheme,
 		connectionString: connectionString,
+		dialector:        dialect,
 	}
 }
 
@@ -106,26 +92,26 @@ func sqlite3conn(u *url.URL) string {
 }
 
 func (s *SQLStorage) Open() error {
-	db, err := gorm.Open(s.sqlType, s.connectionString)
+	db, err := gorm.Open(s.dialector, &gorm.Config{
+		Logger: &GormLogger{},
+	})
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("failed to connect to %s", s.sqlType))
 	}
 	s.db = db
 
-	db.SetLogger(&GormLogger{})
-	db.LogMode(true)
-
-	// Migrate the schema
+	// Migrate the schemasqlType
 	s.db.AutoMigrate(&Device{})
 
 	if s.sqlType == "postgres" {
-		watcher, err := NewPgWatcher(s.connectionString, db.NewScope(&Device{}).TableName())
+		watcher, err := NewPgWatcher(s.connectionString, db.Take(&Device{}).Statement.Table)
 		if err != nil {
 			return errors.Wrap(err, "failed to create pg watcher")
 		}
 		s.Watcher = watcher
 	} else if s.sqlType == "mysql" || s.sqlType == "sqlite3" {
-		s.Watcher = NewGormWatcher(db, db.NewScope(&Device{}).TableName())
+		db.Scopes()
+		s.Watcher = NewGormWatcher(db, db.Take(&Device{}).Statement.Table)
 	} else {
 		s.Watcher = NewInProcessWatcher()
 	}
@@ -135,7 +121,11 @@ func (s *SQLStorage) Open() error {
 
 func (s *SQLStorage) Close() error {
 	if s.db != nil {
-		return s.db.Close()
+		db, err := s.db.DB()
+		if err != nil {
+			return err
+		}
+		return db.Close()
 	}
 	return nil
 }

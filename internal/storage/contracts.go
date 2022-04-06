@@ -31,12 +31,12 @@ type Watcher interface {
 type Callback func(device *Device)
 
 type Device struct {
-	Owner         string    `json:"owner" gorm:"type:varchar(100);unique_index:key;primary_key"`
+	Owner         string    `json:"owner" gorm:"type:varchar(100);uniqueIndex:key;primaryKey"`
 	OwnerName     string    `json:"owner_name"`
 	OwnerEmail    string    `json:"owner_email"`
 	OwnerProvider string    `json:"owner_provider"`
-	Name          string    `json:"name" gorm:"type:varchar(100);unique_index:key;primary_key"`
-	PublicKey     string    `json:"public_key" gorm:"unique_index"`
+	Name          string    `json:"name" gorm:"type:varchar(100);uniqueIndex:key;primaryKey"`
+	PublicKey     string    `json:"public_key" gorm:"uniqueIndex"`
 	Address       string    `json:"address"`
 	CreatedAt     time.Time `json:"created_at" gorm:"column:created_at"`
 
@@ -53,6 +53,8 @@ type Device struct {
 	Endpoint          string     `json:"endpoint"`
 }
 
+// NewStorage returns a basic storage object.
+// Storage.Open() must be called before first use!
 func NewStorage(uri string) (Storage, error) {
 	u, err := url.Parse(uri)
 	if err != nil {
