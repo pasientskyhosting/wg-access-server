@@ -152,6 +152,7 @@ export declare namespace Device {
 		ownerName: string,
 		ownerEmail: string,
 		ownerProvider: string,
+		validUntil?: googleProtobufTimestamp.Timestamp.AsObject,
 	}
 }
 
@@ -260,6 +261,14 @@ export class Device extends jspb.Message {
 		(jspb.Message as any).setProto3StringField(this, 13, value);
 	}
 
+	getValidUntil(): googleProtobufTimestamp.Timestamp {
+		return jspb.Message.getWrapperField(this, googleProtobufTimestamp.Timestamp, 14);
+	}
+
+	setValidUntil(value?: googleProtobufTimestamp.Timestamp): void {
+		(jspb.Message as any).setWrapperField(this, 14, value);
+	}
+
 	serializeBinary(): Uint8Array {
 		const writer = new jspb.BinaryWriter();
 		Device.serializeBinaryToWriter(this, writer);
@@ -282,6 +291,7 @@ export class Device extends jspb.Message {
 			ownerName: this.getOwnerName(),
 			ownerEmail: this.getOwnerEmail(),
 			ownerProvider: this.getOwnerProvider(),
+			validUntil: (f = this.getValidUntil()) && f.toObject(),
 		};
 	}
 
@@ -337,6 +347,10 @@ export class Device extends jspb.Message {
 		const field13 = message.getOwnerProvider();
 		if (field13.length > 0) {
 			writer.writeString(13, field13);
+		}
+		const field14 = message.getValidUntil();
+		if (field14 != null) {
+			writer.writeMessage(14, field14, googleProtobufTimestamp.Timestamp.serializeBinaryToWriter);
 		}
 	}
 
@@ -406,6 +420,11 @@ export class Device extends jspb.Message {
 			case 13:
 				const field13 = reader.readString()
 				message.setOwnerProvider(field13);
+				break;
+			case 14:
+				const field14 = new googleProtobufTimestamp.Timestamp();
+				reader.readMessage(field14, googleProtobufTimestamp.Timestamp.deserializeBinaryFromReader);
+				message.setValidUntil(field14);
 				break;
 			default:
 				reader.skipField();
@@ -876,6 +895,7 @@ function DeviceFromObject(obj: Device.AsObject | undefined): Device | undefined 
 	message.setOwnerName(obj.ownerName);
 	message.setOwnerEmail(obj.ownerEmail);
 	message.setOwnerProvider(obj.ownerProvider);
+	message.setValidUntil(TimestampFromObject(obj.validUntil));
 	return message;
 }
 

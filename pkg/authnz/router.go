@@ -8,11 +8,11 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus/ctxlogrus"
 	"github.com/pkg/errors"
 
-	"github.com/freifunkMUC/wg-access-server/pkg/authnz/authconfig"
-	"github.com/freifunkMUC/wg-access-server/pkg/authnz/authruntime"
-	"github.com/freifunkMUC/wg-access-server/pkg/authnz/authsession"
-	"github.com/freifunkMUC/wg-access-server/pkg/authnz/authtemplates"
-	"github.com/freifunkMUC/wg-access-server/pkg/authnz/authutil"
+	"github.com/pasientskyhosting/wg-access-server/pkg/authnz/authconfig"
+	"github.com/pasientskyhosting/wg-access-server/pkg/authnz/authruntime"
+	"github.com/pasientskyhosting/wg-access-server/pkg/authnz/authsession"
+	"github.com/pasientskyhosting/wg-access-server/pkg/authnz/authtemplates"
+	"github.com/pasientskyhosting/wg-access-server/pkg/authnz/authutil"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"

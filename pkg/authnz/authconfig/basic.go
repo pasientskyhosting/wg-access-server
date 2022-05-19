@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/freifunkMUC/wg-access-server/pkg/authnz/authruntime"
-	"github.com/freifunkMUC/wg-access-server/pkg/authnz/authsession"
+	"github.com/pasientskyhosting/wg-access-server/pkg/authnz/authruntime"
+	"github.com/pasientskyhosting/wg-access-server/pkg/authnz/authsession"
 	"github.com/tg123/go-htpasswd"
 )
 

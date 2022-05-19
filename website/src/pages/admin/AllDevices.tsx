@@ -1,18 +1,18 @@
-import React from 'react';
+import Button from '@material-ui/core/Button';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
-import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import { observer } from 'mobx-react';
+import React from 'react';
 import { grpc } from '../../Api';
-import { lastSeen, lazy } from '../../Util';
-import { Device } from '../../sdk/devices_pb';
-import { confirm } from '../../components/Present';
 import { AppState } from '../../AppState';
+import { confirm } from '../../components/Present';
+import { Device } from '../../sdk/devices_pb';
+import { expires, lastSeen, lazy } from '../../Util';
 
 export const AllDevices = observer(class AllDevices extends React.Component {
   devices = lazy(async () => {
@@ -30,7 +30,7 @@ export const AllDevices = observer(class AllDevices extends React.Component {
     }
   };
 
-  render() {
+  render () {
     if (!this.devices.current) {
       return <p>loading...</p>;
     }
@@ -43,7 +43,7 @@ export const AllDevices = observer(class AllDevices extends React.Component {
     const showProviderCol = rows.length >= 2 && rows.some((r) => r.ownerProvider !== rows[0].ownerProvider);
 
     return (
-      <div style={{ display: 'grid', gridGap: 25, gridAutoFlow: 'row'}}>
+      <div style={{ display: 'grid', gridGap: 25, gridAutoFlow: 'row' }}>
         <Typography variant="h5" component="h5">
           Devices
         </Typography>
@@ -56,6 +56,7 @@ export const AllDevices = observer(class AllDevices extends React.Component {
                 <TableCell>Device</TableCell>
                 <TableCell>Connected</TableCell>
                 <TableCell>Last Seen</TableCell>
+                <TableCell>Expires</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -69,6 +70,7 @@ export const AllDevices = observer(class AllDevices extends React.Component {
                   <TableCell>{row.name}</TableCell>
                   <TableCell>{row.connected ? 'yes' : 'no'}</TableCell>
                   <TableCell>{lastSeen(row.lastHandshakeTime)}</TableCell>
+                  <TableCell>{expires(row.validUntil)}</TableCell>
                   <TableCell>
                     <Button variant="outlined" color="secondary" onClick={() => this.deleteDevice(row)}>
                       Delete
@@ -84,7 +86,7 @@ export const AllDevices = observer(class AllDevices extends React.Component {
         </Typography>
         <code>
           <pre>
-          {JSON.stringify(AppState.info, null, 2)}
+            {JSON.stringify(AppState.info, null, 2)}
 
           </pre>
         </code>

@@ -3,10 +3,11 @@ package services
 import (
 	"context"
 
-	"github.com/freifunkMUC/wg-access-server/internal/devices"
-	"github.com/freifunkMUC/wg-access-server/internal/storage"
-	"github.com/freifunkMUC/wg-access-server/pkg/authnz/authsession"
-	"github.com/freifunkMUC/wg-access-server/proto/proto"
+	"github.com/pasientskyhosting/wg-access-server/internal/config"
+	"github.com/pasientskyhosting/wg-access-server/internal/devices"
+	"github.com/pasientskyhosting/wg-access-server/internal/storage"
+	"github.com/pasientskyhosting/wg-access-server/pkg/authnz/authsession"
+	"github.com/pasientskyhosting/wg-access-server/proto/proto"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus/ctxlogrus"
 	"google.golang.org/grpc/codes"
@@ -15,6 +16,7 @@ import (
 )
 
 type DeviceService struct {
+	Config *config.AppConfig
 	proto.UnimplementedDevicesServer
 	DeviceManager *devices.DeviceManager
 }
@@ -39,7 +41,7 @@ func (d *DeviceService) ListDevices(ctx context.Context, req *proto.ListDevicesR
 	if err != nil {
 		return nil, status.Errorf(codes.PermissionDenied, "not authenticated")
 	}
-
+	d.DeviceManager.UpdateDevicesExpiry(user.Subject, user.CreatedAt, d.Config.ValidFor)
 	devices, err := d.DeviceManager.ListDevices(user.Subject)
 	if err != nil {
 		ctxlogrus.Extract(ctx).Error(err)
@@ -105,6 +107,7 @@ func mapDevice(d *storage.Device) *proto.Device {
 		PublicKey:         d.PublicKey,
 		Address:           d.Address,
 		CreatedAt:         TimeToTimestamp(&d.CreatedAt),
+		ValidUntil:        TimeToTimestamp(&d.ValidUntil),
 		LastHandshakeTime: TimeToTimestamp(d.LastHandshakeTime),
 		ReceiveBytes:      d.ReceiveBytes,
 		TransmitBytes:     d.TransmitBytes,

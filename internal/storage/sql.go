@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
@@ -149,13 +150,17 @@ func (s *SQLStorage) Save(device *Device) error {
 	return nil
 }
 
-func (s *SQLStorage) List(username string) ([]*Device, error) {
+func (s *SQLStorage) List(username string, valid bool) ([]*Device, error) {
 	var err error
 	devices := []*Device{}
 	if username != "" {
 		err = s.db.Where("owner = ?", username).Find(&devices).Error
 	} else {
-		err = s.db.Find(&devices).Error
+		if valid {
+			err = s.db.Where("valid_until > ?", time.Now().Local()).Find(&devices).Error
+		} else {
+			err = s.db.Find(&devices).Error
+		}
 	}
 
 	logrus.Debugf("found %d device(s)", len(devices))
@@ -163,6 +168,17 @@ func (s *SQLStorage) List(username string) ([]*Device, error) {
 		return nil, errors.Wrapf(err, "failed to read devices from sql")
 	}
 	return devices, nil
+}
+
+func (s *SQLStorage) UpdateExpiry(username string, createdAt time.Time, validFor int) error {
+	var err error
+	device := &Device{}
+	expiry := createdAt.Add(time.Minute * time.Duration(validFor))
+	err = s.db.Model(&device).Where("owner = ? AND valid_until < ?", username, expiry).Update("valid_until", expiry).Commit().Error
+	if err != nil {
+		return errors.Wrapf(err, "failed to update device expiry")
+	}
+	return nil
 }
 
 func (s *SQLStorage) Get(owner string, name string) (*Device, error) {

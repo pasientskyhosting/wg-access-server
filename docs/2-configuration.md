@@ -52,6 +52,7 @@ Here's what you can configure:
 | `WG_DNS_ENABLED`           | `--[no-]dns-enabled`       | `dns.enabled`          |          | `true`                                       | Enable/disable the embedded DNS proxy server. This is enabled by default and allows VPN clients to avoid DNS leaks by sending all DNS requests to wg-access-server itself.         |
 | `WG_DNS_UPSTREAM`          | `--dns-upstream`           | `dns.upstream`         |          | _resolvconf autodetection or Cloudflare DNS_ | The upstream DNS servers to proxy DNS requests to. By default the host machine's resolveconf configuration is used to find its upstream DNS server, with a fallback to Cloudflare. |
 | `WG_DNS_DOMAIN`            | `--dns-domain`             | `dns.domain`           |          |                                              | A domain to serve configured devices authoritatively. Queries for names in the format <device>.<user>.<domain> will be answered with the device's IP addresses.                    |
+| `WG_VALID_FOR`            | `--valid-for`             | `validFor`           |          |                                              | Period in minutes a peer will be valid until re-auth is required                    |
 
 ## The Config File (config.yaml)
 

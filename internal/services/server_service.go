@@ -4,10 +4,10 @@ import (
 	"context"
 	"strings"
 
-	"github.com/freifunkMUC/wg-access-server/internal/config"
-	"github.com/freifunkMUC/wg-access-server/internal/network"
-	"github.com/freifunkMUC/wg-access-server/pkg/authnz/authsession"
-	"github.com/freifunkMUC/wg-access-server/proto/proto"
+	"github.com/pasientskyhosting/wg-access-server/internal/config"
+	"github.com/pasientskyhosting/wg-access-server/internal/network"
+	"github.com/pasientskyhosting/wg-access-server/pkg/authnz/authsession"
+	"github.com/pasientskyhosting/wg-access-server/proto/proto"
 
 	"github.com/freifunkMUC/wg-embed/pkg/wgembed"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus/ctxlogrus"

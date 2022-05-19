@@ -1,7 +1,7 @@
 package authconfig
 
 import (
-	"github.com/freifunkMUC/wg-access-server/pkg/authnz/authruntime"
+	"github.com/pasientskyhosting/wg-access-server/pkg/authnz/authruntime"
 )
 
 type AuthConfig struct {

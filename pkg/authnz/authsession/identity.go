@@ -1,5 +1,7 @@
 package authsession
 
+import "time"
+
 type Identity struct {
 	// Provider is the name of the authentication provider
 	// that authenticated (created) this Identity struct.
@@ -15,4 +17,7 @@ type Identity struct {
 	// Claims are any additional claims that middleware have
 	// added to this Identity.
 	Claims Claims
+	// CreatedAt is the timestamp when this Identity sctruct
+	// was created
+	CreatedAt time.Time
 }

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"github.com/freifunkMUC/wg-access-server/internal/traces"
+	"github.com/pasientskyhosting/wg-access-server/internal/traces"
 )
 
 func TracesMiddleware(next http.Handler) http.Handler {

@@ -12,15 +12,16 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/freifunkMUC/wg-access-server/internal/config"
-	"github.com/freifunkMUC/wg-access-server/internal/devices"
-	"github.com/freifunkMUC/wg-access-server/internal/dnsproxy"
-	"github.com/freifunkMUC/wg-access-server/internal/network"
-	"github.com/freifunkMUC/wg-access-server/internal/services"
-	"github.com/freifunkMUC/wg-access-server/internal/storage"
-	"github.com/freifunkMUC/wg-access-server/pkg/authnz"
-	"github.com/freifunkMUC/wg-access-server/pkg/authnz/authconfig"
-	"github.com/freifunkMUC/wg-access-server/pkg/authnz/authsession"
+	"github.com/go-co-op/gocron"
+	"github.com/pasientskyhosting/wg-access-server/internal/config"
+	"github.com/pasientskyhosting/wg-access-server/internal/devices"
+	"github.com/pasientskyhosting/wg-access-server/internal/dnsproxy"
+	"github.com/pasientskyhosting/wg-access-server/internal/network"
+	"github.com/pasientskyhosting/wg-access-server/internal/services"
+	"github.com/pasientskyhosting/wg-access-server/internal/storage"
+	"github.com/pasientskyhosting/wg-access-server/pkg/authnz"
+	"github.com/pasientskyhosting/wg-access-server/pkg/authnz/authconfig"
+	"github.com/pasientskyhosting/wg-access-server/pkg/authnz/authsession"
 
 	"github.com/docker/libnetwork/resolvconf"
 	"github.com/docker/libnetwork/types"
@@ -46,6 +47,7 @@ func Register(app *kingpin.Application) *servecmd {
 	cli.Flag("storage", "The storage backend connection string").Envar("WG_STORAGE").Default("memory://").StringVar(&cmd.AppConfig.Storage)
 	cli.Flag("disable-metadata", "Disable metadata collection (i.e. metrics)").Envar("WG_DISABLE_METADATA").Default("false").BoolVar(&cmd.AppConfig.DisableMetadata)
 	cli.Flag("filename", "The configuration filename (e.g. WireGuard-Home)").Envar("WG_FILENAME").StringVar(&cmd.AppConfig.Filename)
+	cli.Flag("validFor", "The period in minutes a peer is valid until re-auth is required").Envar("WG_VALID_FOR").Default("420").IntVar(&cmd.AppConfig.ValidFor)
 	cli.Flag("wireguard-enabled", "Enable or disable the embedded wireguard server (useful for development)").Envar("WG_WIREGUARD_ENABLED").Default("true").BoolVar(&cmd.AppConfig.WireGuard.Enabled)
 	cli.Flag("wireguard-interface", "Set the wireguard interface name").Default("wg0").Envar("WG_WIREGUARD_INTERFACE").StringVar(&cmd.AppConfig.WireGuard.Interface)
 	cli.Flag("wireguard-private-key", "Wireguard private key").Envar("WG_WIREGUARD_PRIVATE_KEY").StringVar(&cmd.AppConfig.WireGuard.PrivateKey)
@@ -166,7 +168,7 @@ func (cmd *servecmd) Run() {
 	defer storageBackend.Close()
 
 	// Device manager
-	deviceManager := devices.New(wg, storageBackend, conf.VPN.CIDR, conf.VPN.CIDRv6)
+	deviceManager := devices.New(wg, storageBackend, conf)
 
 	// DNS Server
 	if conf.DNS.Enabled {
@@ -254,6 +256,15 @@ func (cmd *servecmd) Run() {
 		Addr:    address,
 		Handler: publicRouter,
 	}
+
+	s := gocron.NewScheduler(time.UTC)
+	s.Every("30s").Do(func() {
+		if err := deviceManager.StartScheduledSync(); err != nil {
+			logrus.Error(errors.Wrap(err, "failed scheduled sync"))
+			return
+		}
+	})
+	s.StartAsync()
 
 	go func() {
 		// Start Web server

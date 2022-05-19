@@ -12,7 +12,8 @@ import (
 type Storage interface {
 	Watcher
 	Save(device *Device) error
-	List(owner string) ([]*Device, error)
+	List(owner string, valid bool) ([]*Device, error)
+	UpdateExpiry(owner string, createdAt time.Time, validFor int) error
 	Get(owner string, name string) (*Device, error)
 	GetByPublicKey(publicKey string) (*Device, error)
 	Delete(device *Device) error
@@ -39,6 +40,7 @@ type Device struct {
 	PublicKey     string    `json:"public_key" gorm:"unique_index"`
 	Address       string    `json:"address"`
 	CreatedAt     time.Time `json:"created_at" gorm:"column:created_at"`
+	ValidUntil    time.Time `json:"valid_until" gorm:"column:valid_until"`
 
 	/**
 	 * Metadata fields below.

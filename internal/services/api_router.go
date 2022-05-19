@@ -6,10 +6,10 @@ import (
 	"math"
 	"net/http"
 
-	"github.com/freifunkMUC/wg-access-server/internal/config"
-	"github.com/freifunkMUC/wg-access-server/internal/devices"
-	"github.com/freifunkMUC/wg-access-server/internal/traces"
-	"github.com/freifunkMUC/wg-access-server/proto/proto"
+	"github.com/pasientskyhosting/wg-access-server/internal/config"
+	"github.com/pasientskyhosting/wg-access-server/internal/devices"
+	"github.com/pasientskyhosting/wg-access-server/internal/traces"
+	"github.com/pasientskyhosting/wg-access-server/proto/proto"
 
 	"github.com/freifunkMUC/wg-embed/pkg/wgembed"
 	grpcMiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -51,6 +51,7 @@ func ApiRouter(deps *ApiServices) http.Handler {
 		Wg:     deps.Wg,
 	})
 	proto.RegisterDevicesServer(server, &DeviceService{
+		Config:        deps.Config,
 		DeviceManager: deps.DeviceManager,
 	})
 

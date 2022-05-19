@@ -3,6 +3,7 @@ package storage
 import (
 	"errors"
 	"strings"
+	"time"
 )
 
 // implements Storage interface
@@ -33,7 +34,7 @@ func (s *InMemoryStorage) Save(device *Device) error {
 	return nil
 }
 
-func (s *InMemoryStorage) List(username string) ([]*Device, error) {
+func (s *InMemoryStorage) List(username string, valid bool) ([]*Device, error) {
 	devices := []*Device{}
 	prefix := func() string {
 		if username != "" {
@@ -49,6 +50,10 @@ func (s *InMemoryStorage) List(username string) ([]*Device, error) {
 	return devices, nil
 }
 
+func (s *InMemoryStorage) UpdateExpiry(owner string, createdAt time.Time, validFor int) error {
+	return nil
+}
+
 func (s *InMemoryStorage) Get(owner string, name string) (*Device, error) {
 	device, ok := s.db[keyStr(owner, name)]
 	if !ok {
@@ -58,7 +63,7 @@ func (s *InMemoryStorage) Get(owner string, name string) (*Device, error) {
 }
 
 func (s *InMemoryStorage) GetByPublicKey(publicKey string) (*Device, error) {
-	devices, err := s.List("")
+	devices, err := s.List("", false)
 	if err != nil {
 		return nil, err
 	}

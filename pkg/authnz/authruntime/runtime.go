@@ -3,7 +3,7 @@ package authruntime
 import (
 	"net/http"
 
-	"github.com/freifunkMUC/wg-access-server/pkg/authnz/authsession"
+	"github.com/pasientskyhosting/wg-access-server/pkg/authnz/authsession"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"

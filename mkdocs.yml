@@ -1,7 +1,7 @@
 site_name: wg-access-server
 strict: true
 repo_name: freifunkMUC/wg-access-server
-repo_url: https://github.com/freifunkMUC/wg-access-server
+repo_url: https://github.com/pasientskyhosting/wg-access-server
 site_url: https://www.freie-netze.org/wg-access-server/
 
 theme:

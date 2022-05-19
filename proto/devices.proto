@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package proto;
 
-option go_package = "github.com/freifunkMUC/wg-access-server/proto/proto";
+option go_package = "github.com/pasientskyhosting/wg-access-server/proto/proto";
 
 import "google/protobuf/wrappers.proto";
 import "google/protobuf/timestamp.proto";
@@ -31,6 +31,7 @@ message Device {
   string owner_name = 11;
   string owner_email = 12;
   string owner_provider = 13;
+  google.protobuf.Timestamp valid_until = 14;
 }
 
 message AddDeviceReq {

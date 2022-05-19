@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/freifunkMUC/wg-access-server/pkg/authnz/authconfig"
+	"github.com/pasientskyhosting/wg-access-server/pkg/authnz/authconfig"
 )
 
 type AppConfig struct {
@@ -34,6 +34,9 @@ type AppConfig struct {
 	// Do not include the '.conf' extension
 	// Defaults to 'WireGuard' (resulting full name 'WireGuard.conf')
 	Filename string `yaml:"filename"`
+	// The number of minutes a peer is valid until re-auth is required
+	// Defaults to 420 (7 hours)
+	ValidFor int `yaml:"validFor"`
 	// Configure WireGuard related settings
 	WireGuard struct {
 		// Set this to false to disable the embedded wireguard

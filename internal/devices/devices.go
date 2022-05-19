@@ -6,9 +6,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/freifunkMUC/wg-access-server/internal/network"
-	"github.com/freifunkMUC/wg-access-server/internal/storage"
-	"github.com/freifunkMUC/wg-access-server/pkg/authnz/authsession"
+	"github.com/pasientskyhosting/wg-access-server/internal/config"
+	"github.com/pasientskyhosting/wg-access-server/internal/network"
+	"github.com/pasientskyhosting/wg-access-server/internal/storage"
+	"github.com/pasientskyhosting/wg-access-server/pkg/authnz/authsession"
 
 	"github.com/freifunkMUC/wg-embed/pkg/wgembed"
 	"github.com/pkg/errors"
@@ -18,12 +19,19 @@ import (
 type DeviceManager struct {
 	wg      wgembed.WireGuardInterface
 	storage storage.Storage
-	cidr    string
-	cidrv6  string
+	Config  *config.AppConfig
 }
 
-func New(wg wgembed.WireGuardInterface, s storage.Storage, cidr, cidrv6 string) *DeviceManager {
-	return &DeviceManager{wg, s, cidr, cidrv6}
+func New(wg wgembed.WireGuardInterface, s storage.Storage, Config *config.AppConfig) *DeviceManager {
+	return &DeviceManager{wg, s, Config}
+}
+
+func (d *DeviceManager) StartScheduledSync() error {
+	// Do a scheduled sync of existing devices
+	if err := d.sync(); err != nil {
+		return errors.Wrap(err, "scheduled device sync from storage failed")
+	}
+	return nil
 }
 
 func (d *DeviceManager) StartSync(disableMetadataCollection bool) error {
@@ -80,6 +88,7 @@ func (d *DeviceManager) AddDevice(identity *authsession.Identity, name string, p
 		PublicKey:     publicKey,
 		Address:       clientAddr,
 		CreatedAt:     time.Now(),
+		ValidUntil:    time.Now().Local().Add(time.Minute * time.Duration(d.Config.ValidFor)),
 	}
 
 	if err := d.SaveDevice(device); err != nil {
@@ -94,7 +103,7 @@ func (d *DeviceManager) SaveDevice(device *storage.Device) error {
 }
 
 func (d *DeviceManager) sync() error {
-	devices, err := d.ListAllDevices()
+	devices, err := d.ListValidDevices()
 	if err != nil {
 		return errors.Wrap(err, "failed to list devices")
 	}
@@ -124,11 +133,19 @@ func (d *DeviceManager) sync() error {
 }
 
 func (d *DeviceManager) ListAllDevices() ([]*storage.Device, error) {
-	return d.storage.List("")
+	return d.storage.List("", false)
+}
+
+func (d *DeviceManager) ListValidDevices() ([]*storage.Device, error) {
+	return d.storage.List("", true)
 }
 
 func (d *DeviceManager) ListDevices(user string) ([]*storage.Device, error) {
-	return d.storage.List(user)
+	return d.storage.List(user, false)
+}
+
+func (d *DeviceManager) UpdateDevicesExpiry(user string, createdAt time.Time, validFor int) error {
+	return d.storage.UpdateExpiry(user, createdAt, validFor)
 }
 
 func (d *DeviceManager) DeleteDevice(user string, name string) error {
@@ -181,8 +198,8 @@ func (d *DeviceManager) nextClientAddress() (string, error) {
 	var ipv4 string
 	var ipv6 string
 
-	if d.cidr != "" {
-		vpnipv4, vpnsubnetv4 := MustParseCIDR(d.cidr)
+	if d.Config.VPN.CIDR != "" {
+		vpnipv4, vpnsubnetv4 := MustParseCIDR(d.Config.VPN.CIDR)
 		startIPv4 := vpnipv4.Mask(vpnsubnetv4.Mask)
 
 		// Add the network address and the VPN server address to the list of occupied addresses
@@ -199,8 +216,8 @@ func (d *DeviceManager) nextClientAddress() (string, error) {
 		}
 	}
 
-	if d.cidrv6 != "" {
-		vpnipv6, vpnsubnetv6 := MustParseCIDR(d.cidrv6)
+	if d.Config.VPN.CIDRv6 != "" {
+		vpnipv6, vpnsubnetv6 := MustParseCIDR(d.Config.VPN.CIDRv6)
 		startIPv6 := vpnipv6.Mask(vpnsubnetv6.Mask)
 
 		// Add the network address and the VPN server address to the list of occupied addresses
@@ -220,19 +237,19 @@ func (d *DeviceManager) nextClientAddress() (string, error) {
 	if ipv4 != "" {
 		if ipv6 != "" {
 			return fmt.Sprintf("%s, %s", ipv4, ipv6), nil
-		} else if d.cidrv6 != "" {
-			return "", fmt.Errorf("there are no free IP addresses in the vpn subnet: '%s'", d.cidrv6)
+		} else if d.Config.VPN.CIDRv6 != "" {
+			return "", fmt.Errorf("there are no free IP addresses in the vpn subnet: '%s'", d.Config.VPN.CIDRv6)
 		} else {
 			return ipv4, nil
 		}
 	} else if ipv6 != "" {
-		if d.cidr != "" {
-			return "", fmt.Errorf("there are no free IP addresses in the vpn subnet: '%s'", d.cidr)
+		if d.Config.VPN.CIDR != "" {
+			return "", fmt.Errorf("there are no free IP addresses in the vpn subnet: '%s'", d.Config.VPN.CIDR)
 		} else {
 			return ipv6, nil
 		}
 	} else {
-		return "", fmt.Errorf("there are no free IP addresses in the vpn subnets: '%s', '%s'", d.cidr, d.cidrv6)
+		return "", fmt.Errorf("there are no free IP addresses in the vpn subnets: '%s', '%s'", d.Config.VPN.CIDR, d.Config.VPN.CIDRv6)
 	}
 }
 

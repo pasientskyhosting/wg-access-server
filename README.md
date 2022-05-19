@@ -101,17 +101,17 @@ https://github.com/freifunkMUC/wg-access-server-chart.
 
 ## Screenshots
 
-![Devices](https://github.com/freifunkMUC/wg-access-server/raw/master/screenshots/devices.png)
+![Devices](https://github.com/pasientskyhosting/wg-access-server/raw/master/screenshots/devices.png)
 
-![Connect iOS](https://github.com/freifunkMUC/wg-access-server/raw/master/screenshots/connect-mobile.png)
+![Connect iOS](https://github.com/pasientskyhosting/wg-access-server/raw/master/screenshots/connect-mobile.png)
 
-![Connect MacOS](https://github.com/freifunkMUC/wg-access-server/raw/master/screenshots/connect-desktop.png)
+![Connect MacOS](https://github.com/pasientskyhosting/wg-access-server/raw/master/screenshots/connect-desktop.png)
 
-![Sign In](https://github.com/freifunkMUC/wg-access-server/raw/master/screenshots/signin.png)
+![Sign In](https://github.com/pasientskyhosting/wg-access-server/raw/master/screenshots/signin.png)
 
 ## Changelog
 
-See the [Releases section](https://github.com/freifunkMUC/wg-access-server/releases)
+See the [Releases section](https://github.com/pasientskyhosting/wg-access-server/releases)
 
 ## Development
 

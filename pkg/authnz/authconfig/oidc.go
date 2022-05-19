@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/freifunkMUC/wg-access-server/pkg/authnz/authruntime"
-	"github.com/freifunkMUC/wg-access-server/pkg/authnz/authsession"
-	"github.com/freifunkMUC/wg-access-server/pkg/authnz/authutil"
+	"github.com/pasientskyhosting/wg-access-server/pkg/authnz/authruntime"
+	"github.com/pasientskyhosting/wg-access-server/pkg/authnz/authsession"
+	"github.com/pasientskyhosting/wg-access-server/pkg/authnz/authutil"
 
 	"github.com/coreos/go-oidc"
 	"github.com/gorilla/mux"
@@ -148,7 +148,7 @@ func (c *OIDCConfig) callbackHandler(runtime *authruntime.ProviderRuntime, oauth
 		if name, ok := oidcProfileData["name"].(string); ok {
 			identity.Name = name
 		}
-
+		identity.CreatedAt = time.Now().Local()
 		err = runtime.SetSession(w, r, &authsession.AuthSession{
 			Identity: identity,
 		})
@@ -156,7 +156,6 @@ func (c *OIDCConfig) callbackHandler(runtime *authruntime.ProviderRuntime, oauth
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-
 		runtime.Done(w, r)
 	}
 }

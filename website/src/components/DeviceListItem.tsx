@@ -1,19 +1,19 @@
-import React from 'react';
-import Card from '@material-ui/core/Card';
-import CardHeader from '@material-ui/core/CardHeader';
-import CardContent from '@material-ui/core/CardContent';
 import Avatar from '@material-ui/core/Avatar';
+import Card from '@material-ui/core/Card';
+import CardContent from '@material-ui/core/CardContent';
+import CardHeader from '@material-ui/core/CardHeader';
+import MenuItem from '@material-ui/core/MenuItem';
 import WifiIcon from '@material-ui/icons/Wifi';
 import WifiOffIcon from '@material-ui/icons/WifiOff';
-import MenuItem from '@material-ui/core/MenuItem';
+import { observer } from 'mobx-react';
 import numeral from 'numeral';
-import { lastSeen } from '../Util';
+import React from 'react';
+import { grpc } from '../Api';
 import { AppState } from '../AppState';
+import { Device } from '../sdk/devices_pb';
+import { expires, lastSeen } from '../Util';
 import { IconMenu } from './IconMenu';
 import { PopoverDisplay } from './PopoverDisplay';
-import { Device } from '../sdk/devices_pb';
-import { grpc } from '../Api';
-import { observer } from 'mobx-react';
 
 interface Props {
   device: Device.AsObject;
@@ -32,7 +32,7 @@ export const DeviceListItem = observer(class DeviceListItem extends React.Compon
     }
   };
 
-  render() {
+  render () {
     const device = this.props.device;
     return (
       <Card>
@@ -79,6 +79,10 @@ export const DeviceListItem = observer(class DeviceListItem extends React.Compon
               <tr>
                 <td>Last Seen</td>
                 <td>{lastSeen(device.lastHandshakeTime)}</td>
+              </tr>
+              <tr>
+                <td>Expires</td>
+                <td>{expires(device.validUntil)}</td>
               </tr>
               <tr>
                 <td>Public key</td>

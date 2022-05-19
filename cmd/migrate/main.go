@@ -1,7 +1,7 @@
 package migrate
 
 import (
-	"github.com/freifunkMUC/wg-access-server/internal/storage"
+	"github.com/pasientskyhosting/wg-access-server/internal/storage"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -44,7 +44,7 @@ func (cmd *migratecmd) Run() {
 	}
 	defer destBackend.Close()
 
-	srcDevices, err := srcBackend.List("")
+	srcDevices, err := srcBackend.List("", false)
 	if err != nil {
 		logrus.Fatal(errors.Wrap(err, "failed to list all devices from source storage backend"))
 	}
